@@ -1,8 +1,6 @@
 (function($) {
     // What does the dualListBox plugin do?
     $.fn.dualListBox = function(options) {
-        if (!this.length) { return this; }
-
         var settings = $.extend(true, {}, $.fn.dualListBox.defaults, options);
 
         var filter = function(list, search) {
@@ -43,8 +41,8 @@
         }
 
         var updateResultCounters = function() {
-            updateCounter('.from');
-            updateCounter('.to');
+            updateCounter(settings.origin);
+            updateCounter(settings.destination);
         }
 
         var updateButton = function(list, oneBtn, allBtn) {
@@ -53,26 +51,26 @@
         }
 
         var updateButtons = function() {
-            updateButton('.from', '.move-to', '.move-all-to');
-            updateButton('.to', '.move-from', '.move-all-from');
+            updateButton(settings.origin, settings.oneDestination, settings.allDestination);
+            updateButton(settings.destination, settings.oneOrigin, settings.allOrigin);
         }
 
         return this.each(function() {
             var $this = $(this);
-            $('.move-from').click(function(event) {
-                move(true, '.to', '.from');
+            $(settings.oneOrigin).click(function(event) {
+                move(true, settings.destination, settings.origin);
             });
 
-            $('.move-to').click(function(event) {
-                move(true, '.from', '.to');
+            $(settings.oneDestination).click(function(event) {
+                move(true, settings.origin, settings.destination);
             });
 
-            $('.move-all-from').click(function(event) {
-                move(false, '.to', '.from');
+            $(settings.allOrigin).click(function(event) {
+                move(false, settings.destination, settings.origin);
             });
 
-            $('.move-all-to').click(function(event) {
-                move(false, '.from', '.to');
+            $(settings.allDestination).click(function(event) {
+                move(false, settings.origin, settings.destination);
             });
 
             var thread = null;
@@ -83,26 +81,24 @@
                     clearTimeout(thread);
                     var $this = $(this); 
                     thread = setTimeout(function() {
-                        filter('.from', $this.val());
-                    }, 500);
+                        filter(settings.origin, $this.val());
+                    }, settings.delay);
                 }
             });
 
-            $('.from').keydown(function(event) {
-                var keycode = (event.keyCode ? event.keyCode : event.which);
-                if(keycode == '13'){
-                    move(true, '.from', '.to');
-                }
-            });
+            var attachMoveOnEnter = function(from, to) {
+                $(from).keydown(function(event) {
+                    var keycode = (event.keyCode ? event.keyCode : event.which);
+                    if(keycode == '13'){
+                        move(true, from, to);
+                    }
+                });                
+            }
 
-            $('.to').keydown(function(event) {
-                var keycode = (event.keyCode ? event.keyCode : event.which);
-                if(keycode == '13'){
-                    move(true, '.to', '.from');
-                }
-            });
-            $('select').click(updateButtons);
-            $('select').keydown(updateButtons);
+            attachMoveOnEnter(settings.destination, settings.origin);
+            attachMoveOnEnter(settings.origin, settings.destination);
+
+            $('select').change(updateButtons);
             updateResultCounters();
             updateButtons();
         });
@@ -110,7 +106,13 @@
 
     // default options
     $.fn.dualListBox.defaults = {
-        delay: 100
+        delay: 100,
+        origin: '.origin',
+        destination: '.dest',
+        allOrigin: '.all-to-origin',
+        oneOrigin: '.one-to-origin',
+        allDestination: '.all-to-dest',
+        oneDestination: '.one-to-dest'
     };
     $('.dual-list').dualListBox();
 })(jQuery);
