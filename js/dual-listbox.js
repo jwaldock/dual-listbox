@@ -14,8 +14,7 @@
                     $item.show();
                 }
             });
-            updateResultCounters();
-            updateButtons();
+            update();
         }
 
         var sortOptions = function (items) {
@@ -26,12 +25,11 @@
             });
         }
 
-        var move = function(selected, from, to) {
-            var items = $().add($(selected ? 'option:selected:visible' : 'option:visible', from)).add($('option', to));                
+        var move = function($listBox, selected, from, to) {
+            var items = $().add($(selected ? 'option:selected:visible' : 'option:visible', from, '.aaa')).add($('option', to));                
             items.prop('selected', false);
             $(to).html(sortOptions(items));
-            updateResultCounters();
-            updateButtons();
+            update();
         }
 
         var updateCounter = function(list) {
@@ -40,37 +38,35 @@
             $('.results', $filterResults).text(count);            
         }
 
-        var updateResultCounters = function() {
-            updateCounter(settings.origin);
-            updateCounter(settings.destination);
-        }
-
         var updateButton = function(list, oneBtn, allBtn) {
             $(allBtn).prop('disabled', !$('option:visible', list).length);
             $(oneBtn).prop('disabled', !$('option:visible:selected', list).length);
         }
 
-        var updateButtons = function() {
+        var update = function($listBox) {
+        	console.log($(this));
+            updateCounter(settings.origin);
+            updateCounter(settings.destination);
             updateButton(settings.origin, settings.oneDestination, settings.allDestination);
             updateButton(settings.destination, settings.oneOrigin, settings.allOrigin);
         }
 
         return this.each(function() {
-            var $this = $(this);
+            var $listBox = $(this);
             $(settings.oneOrigin).click(function(event) {
-                move(true, settings.destination, settings.origin);
+                move($listBox, true, settings.destination, settings.origin);
             });
 
             $(settings.oneDestination).click(function(event) {
-                move(true, settings.origin, settings.destination);
+                move($listBox, true, settings.origin, settings.destination);
             });
 
             $(settings.allOrigin).click(function(event) {
-                move(false, settings.destination, settings.origin);
+                move($listBox, false, settings.destination, settings.origin);
             });
 
             $(settings.allDestination).click(function(event) {
-                move(false, settings.origin, settings.destination);
+                move($listBox, false, settings.origin, settings.destination);
             });
 
             var thread = null;
@@ -98,9 +94,8 @@
             attachMoveOnEnter(settings.destination, settings.origin);
             attachMoveOnEnter(settings.origin, settings.destination);
 
-            $('select').change(updateButtons);
-            updateResultCounters();
-            updateButtons();
+            $('select').change(update);
+            update();
         });
     };
 

@@ -1,0 +1,22 @@
+{
+  "name": "dual-listbox",
+  "homepage": "https://github.com/jwaldock/dual-listbox",
+  "authors": [
+    "Joel Waldock <waldock@windowslive.com>"
+  ],
+  "description": "jQuery dual listbox plugin",
+  "main": "",
+  "keywords": [
+    "jQuery",
+    "listbox",
+    "plugin"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
