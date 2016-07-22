@@ -2,10 +2,10 @@
   "name": "dual-listbox",
   "homepage": "https://github.com/jwaldock/dual-listbox",
   "authors": [
-    "Joel Waldock <waldock@windowslive.com>"
+    "Joel Waldock <joel.c.waldock@gmail.com>"
   ],
   "description": "jQuery dual listbox plugin",
-  "main": "",
+  "main": "js/dual-listbox.js",
   "keywords": [
     "jQuery",
     "listbox",
@@ -18,5 +18,8 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1"
+  },
 }
