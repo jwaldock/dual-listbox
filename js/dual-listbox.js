@@ -26,9 +26,11 @@
         }
 
         var move = function($listBox, selected, from, to) {
-            var items = $().add($(selected ? 'option:selected:visible' : 'option:visible', from, '.aaa')).add($('option', to));                
+            var items = $()
+            	.add($listBox.find(selected ? 'option:selected:visible' : 'option:visible', from))
+            	.add($listBox.find('option', to));                
             items.prop('selected', false);
-            $(to).html(sortOptions(items));
+            $listBox.find(to).html(sortOptions(items));
             update();
         }
 
@@ -83,10 +85,10 @@
             });
 
             var attachMoveOnEnter = function(from, to) {
-                $(from).keydown(function(event) {
+            	$listBox.find(from).keydown(function(event) {
                     var keycode = (event.keyCode ? event.keyCode : event.which);
                     if(keycode == '13'){
-                        move(true, from, to);
+                        move($listBox, true, from, to);
                     }
                 });                
             }
