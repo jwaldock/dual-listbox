@@ -3,7 +3,7 @@
     $.fn.dualListBox = function(options) {
         var settings = $.extend(true, {}, $.fn.dualListBox.defaults, options);
 
-        var filter = function(list, search) {
+        var filter = function($listBox, list, search) {
             var regex = new RegExp(search, 'gi');
             var $items = $('option', list);
             $.each($items, function() {
@@ -14,7 +14,7 @@
                     $item.show();
                 }
             });
-            update();
+            update($listBox);
         }
 
         var sortOptions = function (items) {
@@ -31,48 +31,46 @@
                 .add($('option', $listBox.find(to)));  
             items.prop('selected', false);
             $listBox.find(to).html(sortOptions(items));
-            update();
+            update($listBox);
         }
 
-        var updateCounter = function(list) {
+        var updateCounter = function($listBox, list) {
             var count = $('option:visible', list).length;
-            var $filterResults = $(list).siblings('.filter-results');
+            var $filterResults = $listBox.find(list).siblings('.filter-results');
             $('.results', $filterResults).text(count);            
         }
 
-        var updateButton = function(list, oneBtn, allBtn) {
-            $(allBtn).prop('disabled', !$('option:visible', list).length);
-            $(oneBtn).prop('disabled', !$('option:visible:selected', list).length);
+        var updateButton = function($listBox, list, oneBtn, allBtn) {
+            $listBox.find(allBtn).prop('disabled', !$('option:visible', list).length);
+            $listBox.find(oneBtn).prop('disabled', !$('option:visible:selected', list).length);
         }
 
         var update = function($listBox) {
-            updateCounter(settings.origin);
-            updateCounter(settings.destination);
-            updateButton(settings.origin, settings.oneDestination, settings.allDestination);
-            updateButton(settings.destination, settings.oneOrigin, settings.allOrigin);
+            updateCounter($listBox, settings.origin);
+            updateCounter($listBox, settings.destination);
+            updateButton($listBox, settings.origin, settings.oneDestination, settings.allDestination);
+            updateButton($listBox, settings.destination, settings.oneOrigin, settings.allOrigin);
         }
 
         return this.each(function() {
             var $listBox = $(this);
-            $(settings.oneOrigin).click(function(event) {
+            $listBox.find(settings.oneOrigin).click(function(event) {
                 move($listBox, true, settings.destination, settings.origin);
             });
 
-            $(settings.oneDestination).click(function(event) {
+            $listBox.find(settings.oneDestination).click(function(event) {
                 move($listBox, true, settings.origin, settings.destination);
             });
 
-            $(settings.allOrigin).click(function(event) {
+            $listBox.find(settings.allOrigin).click(function(event) {
                 move($listBox, false, settings.destination, settings.origin);
             });
 
-            $(settings.allDestination).click(function(event) {
+            $listBox.find(settings.allDestination).click(function(event) {
                 move($listBox, false, settings.origin, settings.destination);
             });
 
             var thread = null;
-
-
 
             var attachFilter = function(filterClass, list) {
                 $(filterClass).keydown(function(event) {
@@ -82,7 +80,7 @@
                         clearTimeout(thread);
                         var $this = $(this); 
                         thread = setTimeout(function() {
-                            filter(list, $this.val());
+                            filter($listBox, list, $this.val());
                         }, settings.delay);
                     }
                 });
@@ -102,10 +100,10 @@
             attachMoveOnEnter(settings.destination, settings.origin);
             attachMoveOnEnter(settings.origin, settings.destination);
 
-            $(settings.origin).change(update);
-            $(settings.destination).change(update);
+            $listBox.find(settings.origin).change( function() { update($listBox) } );
+            $listBox.find(settings.destination).change( function() { update($listBox) } );
 
-            update();
+            update($listBox);
         });
     };
 
