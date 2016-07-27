@@ -27,8 +27,8 @@
 
         var move = function($listBox, selected, from, to) {
             var items = $()
-            	.add($listBox.find(selected ? 'option:selected:visible' : 'option:visible', from))
-            	.add($listBox.find('option', to));                
+                .add($(selected ? 'option:selected:visible' : 'option:visible', $listBox.find(from)))
+                .add($('option', $listBox.find(to)));  
             items.prop('selected', false);
             $listBox.find(to).html(sortOptions(items));
             update();
@@ -46,7 +46,6 @@
         }
 
         var update = function($listBox) {
-        	console.log($(this));
             updateCounter(settings.origin);
             updateCounter(settings.destination);
             updateButton(settings.origin, settings.oneDestination, settings.allDestination);
@@ -73,30 +72,39 @@
 
             var thread = null;
 
-            $('.dual-list-filter').keydown(function(event) {
-                var keycode = (event.keyCode ? event.keyCode : event.which);
-                if(keycode != '13'){
-                    clearTimeout(thread);
-                    var $this = $(this); 
-                    thread = setTimeout(function() {
-                        filter(settings.origin, $this.val());
-                    }, settings.delay);
-                }
-            });
+
+
+            var attachFilter = function(filterClass, list) {
+                $(filterClass).keydown(function(event) {
+                    console.log('aaa');
+                    var keycode = (event.keyCode ? event.keyCode : event.which);
+                    if(keycode != '13'){
+                        clearTimeout(thread);
+                        var $this = $(this); 
+                        thread = setTimeout(function() {
+                            filter(list, $this.val());
+                        }, settings.delay);
+                    }
+                });
+            };
 
             var attachMoveOnEnter = function(from, to) {
-            	$listBox.find(from).keydown(function(event) {
+                $listBox.find(from).keydown(function(event) {
                     var keycode = (event.keyCode ? event.keyCode : event.which);
                     if(keycode == '13'){
                         move($listBox, true, from, to);
                     }
                 });                
-            }
+            };
 
+            attachFilter(settings.originFilter, settings.origin);
+            attachFilter(settings.destinationFilter, settings.destination);
             attachMoveOnEnter(settings.destination, settings.origin);
             attachMoveOnEnter(settings.origin, settings.destination);
 
-            $('select').change(update);
+            $(settings.origin).change(update);
+            $(settings.destination).change(update);
+
             update();
         });
     };
@@ -106,6 +114,8 @@
         delay: 100,
         origin: '.origin',
         destination: '.dest',
+        originFilter: '.origin-filter',
+        destinationFilter: '.dest-filter',
         allOrigin: '.all-to-origin',
         oneOrigin: '.one-to-origin',
         allDestination: '.all-to-dest',
