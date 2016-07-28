@@ -1,9 +1,15 @@
 (function($) {
-    // What does the dualListBox plugin do?
-    $.fn.dualListBox = function(options) {
-        var settings = $.extend(true, {}, $.fn.dualListBox.defaults, options);
+    'use strict';
 
-        var filter = function($listBox, list, search) {
+    $.fn.dualListBox = function(options) {
+        var defaults = function ($listBox) {
+            return {
+                delay: $listBox.data('delay') || 200,
+                sort: $listBox.data('sort') || true
+            }
+        };
+
+        var filter = function(list, search) {
             var regex = new RegExp(search, 'gi');
             var $items = $('option', list);
             $.each($items, function() {
@@ -14,110 +20,80 @@
                     $item.show();
                 }
             });
-            update($listBox);
-        }
+        };
 
         var sortOptions = function (items) {
             return items.sort(function(a, b){
                 var aText = $(a).text(), bText = $(b).text();
-                if(aText == bText) return 0;
+                if (aText == bText) {
+                    return 0;
+                }
                 return aText > bText ? 1 : -1;
             });
-        }
-
-        var move = function($listBox, selected, from, to) {
-            var items = $()
-                .add($(selected ? 'option:selected:visible' : 'option:visible', $listBox.find(from)))
-                .add($('option', $listBox.find(to)));  
-            items.prop('selected', false);
-            $listBox.find(to).html(sortOptions(items));
-            update($listBox);
-        }
-
-        var updateCounter = function($listBox, list) {
-            var count = $('option:visible', list).length;
-            var $filterResults = $listBox.find(list).siblings('.filter-results');
-            $('.results', $filterResults).text(count);            
-        }
-
-        var updateButton = function($listBox, list, oneBtn, allBtn) {
-            $listBox.find(allBtn).prop('disabled', !$('option:visible', list).length);
-            $listBox.find(oneBtn).prop('disabled', !$('option:visible:selected', list).length);
-        }
+        };
 
         var update = function($listBox) {
-            updateCounter($listBox, settings.origin);
-            updateCounter($listBox, settings.destination);
-            updateButton($listBox, settings.origin, settings.oneDestination, settings.allDestination);
-            updateButton($listBox, settings.destination, settings.oneOrigin, settings.allOrigin);
-        }
+            // update lists' counters
+            $listBox.find('[data-list-count]').each(function() {
+                var $results = $(this),
+                    $list = $listBox.find('select[data-list="' + $results.data('list-count') + '"]');
+                $results.text($('option:visible', $list).length)
+            });
+
+            // update button disabled status
+            $listBox.find('button[data-move]').each(function() {
+                var $options,
+                    $button = $(this),  
+                    $list = $listBox.find('select[data-list!="' + $button.data('move-to') + '"]');
+
+                if ($button.data('move') == 'all') {
+                    $button.prop('disabled', !$('option:visible', $list).length);
+                } else if ($button.data('move') == 'selected') {
+                    $button.prop('disabled', !$('option:visible:selected', $list).length);
+                }
+            });
+        };
 
         return this.each(function() {
             var $listBox = $(this);
-            $listBox.find(settings.oneOrigin).click(function(event) {
-                move($listBox, true, settings.destination, settings.origin);
-            });
+            var settings = $.extend(true, {}, defaults($listBox), $listBox, options);
 
-            $listBox.find(settings.oneDestination).click(function(event) {
-                move($listBox, true, settings.origin, settings.destination);
-            });
+            $listBox.find('button[data-move]').click(function(e) {
+                var selected, items, 
+                    $button = $(this),
+                    from = 'select[data-list!="' + $button.data('move-to') + '"]',
+                    to = 'select[data-list="' + $button.data('move-to') + '"]';
 
-            $listBox.find(settings.allOrigin).click(function(event) {
-                move($listBox, false, settings.destination, settings.origin);
-            });
+                if ($button.data('move') == 'selected') {
+                    items = $('option:selected:visible', $listBox.find(from));
+                } else if ($button.data('move') == 'all') {
+                    items = $('option:visible', $listBox.find(from));
+                }
 
-            $listBox.find(settings.allDestination).click(function(event) {
-                move($listBox, false, settings.origin, settings.destination);
+                items = items.add($('option', $listBox.find(to)));  
+                items.prop('selected', false);
+                $listBox.find(to).html(settings.sort ? sortOptions(items) : items);
+                update($listBox);
             });
 
             var thread = null;
+            $('input[data-filter]').keydown(function(event) {
+                var keycode = (event.keyCode ? event.keyCode : event.which);
+                if(keycode != '13'){
+                    clearTimeout(thread);
+                    var $filterBox = $(this); 
+                    thread = setTimeout(function() {
+                        filter('select[data-list="' + $filterBox.data('filter') + '"]', $filterBox.val());
+                        update($listBox);
+                    }, settings.delay);
+                }
+            });
 
-            var attachFilter = function(filterClass, list) {
-                $(filterClass).keydown(function(event) {
-                    console.log('aaa');
-                    var keycode = (event.keyCode ? event.keyCode : event.which);
-                    if(keycode != '13'){
-                        clearTimeout(thread);
-                        var $this = $(this); 
-                        thread = setTimeout(function() {
-                            filter($listBox, list, $this.val());
-                        }, settings.delay);
-                    }
-                });
-            };
-
-            var attachMoveOnEnter = function(from, to) {
-                $listBox.find(from).keydown(function(event) {
-                    var keycode = (event.keyCode ? event.keyCode : event.which);
-                    if(keycode == '13'){
-                        move($listBox, true, from, to);
-                    }
-                });                
-            };
-
-            attachFilter(settings.originFilter, settings.origin);
-            attachFilter(settings.destinationFilter, settings.destination);
-            attachMoveOnEnter(settings.destination, settings.origin);
-            attachMoveOnEnter(settings.origin, settings.destination);
-
-            $listBox.find(settings.origin).change( function() { update($listBox) } );
-            $listBox.find(settings.destination).change( function() { update($listBox) } );
+            $listBox.find('select[data-list]').change( function() { update($listBox) } );
 
             update($listBox);
         });
     };
-
-    // default options
-    $.fn.dualListBox.defaults = {
-        delay: 100,
-        origin: '.origin',
-        destination: '.dest',
-        originFilter: '.origin-filter',
-        destinationFilter: '.dest-filter',
-        allOrigin: '.all-to-origin',
-        oneOrigin: '.one-to-origin',
-        allDestination: '.all-to-dest',
-        oneDestination: '.one-to-dest'
-    };
-    $('.dual-list').dualListBox();
+    
+    $('div[data-role="dual-listbox"]').dualListBox();
 })(jQuery);
