@@ -54,10 +54,24 @@
             });
         };
 
-        return this.each(function() {
-            var $listBox = $(this);
-            var settings = $.extend(true, {}, defaults($listBox), $listBox, options);
+        var loadItems = function ($listBox) {
+            $listBox.find('select[data-list]').each(function() {
+                var $list = $(this),
+                    itemsUrl = $list.data('items-url');
+                if (itemsUrl) {
+                    $.getJSON(itemsUrl).done(function(data) {
+                        var items = $('option', $list);
+                        $.each(data, function(index, value) {
+                            items = items.add($('<option>').prop('value', index).text(value));
+                        });
+                        $list.html( sortOptions(items));
+                        update($listBox);
+                    });
+                }
+            });
+        };
 
+        var attachButtons = function ($listBox, sort) {
             $listBox.find('button[data-move]').click(function(e) {
                 var selected, items, 
                     $button = $(this),
@@ -72,28 +86,39 @@
 
                 items = items.add($('option', $listBox.find(to)));  
                 items.prop('selected', false);
-                $listBox.find(to).html(settings.sort ? sortOptions(items) : items);
+                $listBox.find(to).html(sort ? sortOptions(items) : items);
                 update($listBox);
             });
+        };
 
+        var attachFilter = function ($listBox, delay) {
             var thread = null;
-            $('input[data-filter]').keydown(function(event) {
-                var keycode = (event.keyCode ? event.keyCode : event.which);
+
+            $('input[data-filter]').keydown(function(e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
                 if(keycode != '13'){
                     clearTimeout(thread);
                     var $filterBox = $(this); 
                     thread = setTimeout(function() {
                         filter('select[data-list="' + $filterBox.data('filter') + '"]', $filterBox.val());
                         update($listBox);
-                    }, settings.delay);
+                    }, delay);
                 }
             });
+        };
 
+        return this.each(function() {
+            var $listBox = $(this),
+                settings = $.extend(true, {}, defaults($listBox), $listBox, options);
+
+            attachButtons($listBox, settings.sort);
+            attachFilter($listBox, settings.delay);
             $listBox.find('select[data-list]').change( function() { update($listBox) } );
+            loadItems($listBox);
 
             update($listBox);
         });
     };
-    
+
     $('div[data-role="dual-listbox"]').dualListBox();
 })(jQuery);
