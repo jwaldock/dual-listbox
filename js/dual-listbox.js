@@ -9,9 +9,10 @@
             }
         };
 
-        var filter = function(list, search) {
-            var regex = new RegExp(search, 'gi');
-            var $items = $('option', list);
+        var filter = function($listBox, $filterInput) {
+            var regex = new RegExp($filterInput.val(), 'gi');
+            var $list = $listBox.find('select[data-list="' + $filterInput.data('filter') + '"]')
+            var $items = $('option', $list);
             $.each($items, function() {
                 var $item = $(this);
                 if($item.text().match(regex) === null) {
@@ -94,13 +95,13 @@
         var attachFilter = function ($listBox, delay) {
             var thread = null;
 
-            $('input[data-filter]').keydown(function(e) {
+            $listBox.find('input[data-filter]').keydown(function(e) {
                 var keycode = (e.keyCode ? e.keyCode : e.which);
                 if(keycode != '13'){
                     clearTimeout(thread);
-                    var $filterBox = $(this); 
+                    var $filterInput = $(this); 
                     thread = setTimeout(function() {
-                        filter('select[data-list="' + $filterBox.data('filter') + '"]', $filterBox.val());
+                        filter($listBox, $filterInput);
                         update($listBox);
                     }, delay);
                 }
