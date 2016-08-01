@@ -53,6 +53,22 @@
                     $button.prop('disabled', !$('option:visible:selected', $list).length);
                 }
             });
+
+            // update hidden inputs
+            $listBox.find('div[data-list-inputs]').each(function() {
+                var $inputCont = $(this).empty(),
+                    $list = $listBox.find('select[data-list="' + $inputCont.data('list-inputs') + '"]');
+
+                $list.find('option').each(function () {
+                    var $input = $('<input>').prop({
+                        name: $inputCont.data('input-name') + '[]',
+                        value: $(this).val(),
+                        type: "hidden"
+                    });
+
+                    $inputCont.append($input);
+                });
+            });
         };
 
         var loadItems = function ($listBox) {
@@ -73,7 +89,9 @@
         };
 
         var attachButtons = function ($listBox, sort) {
-            $listBox.find('button[data-move]').click(function(e) {
+            $listBox.find('[data-move]').click(function(e) {
+                e.preventDefault();
+
                 var selected, items, 
                     $button = $(this),
                     from = 'select[data-list!="' + $button.data('move-to') + '"]',
@@ -104,6 +122,8 @@
                         filter($listBox, $filterInput);
                         update($listBox);
                     }, delay);
+                } else {
+                    e.preventDefault();
                 }
             });
         };
