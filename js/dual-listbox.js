@@ -54,20 +54,11 @@
                 }
             });
 
-            // update hidden inputs
-            $listBox.find('div[data-list-inputs]').each(function() {
-                var $inputCont = $(this).empty(),
-                    $list = $listBox.find('select[data-list="' + $inputCont.data('list-inputs') + '"]');
-
-                $list.find('option').each(function () {
-                    var $input = $('<input>').prop({
-                        name: $inputCont.data('input-name') + '[]',
-                        value: $(this).val(),
-                        type: "hidden"
-                    });
-
-                    $inputCont.append($input);
-                });
+            // update hidden select
+            $listBox.find('select[data-list-inputs]').each(function() {
+                var $select = $(this),
+                    $list = $listBox.find('select[data-list="' + $select.data('list-inputs') + '"]');
+                $select.html($list.find('option').clone().prop('selected', true)).change();
             });
         };
 
